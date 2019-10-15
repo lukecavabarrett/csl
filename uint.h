@@ -16,7 +16,8 @@ class basic_uint {
     typedef unsigned int iint;
     typedef mp_limb_t word_t;
     static constexpr size_t n_words = (2 << x);
-    word_t data[n_words]{}; // little endian
+    word_t data[n_words]; // little endian
+    static word_t buffer_data[2*n_words];
     static constexpr size_t n_bytes = n_words * sizeof(word_t);
 public:
     static constexpr size_t n_bits = n_words * sizeof(word_t) * 8;
@@ -35,6 +36,7 @@ public:
     explicit basic_uint(const basic_uint<y> &); //smaller basic_uint, narrowing copy constructor
 
     //arithmetic operators
+
     template<class UintT>
     basic_uint& operator+=(const UintT&);
     basic_uint& operator+=(const basic_uint&);
@@ -42,6 +44,22 @@ public:
     basic_uint& operator+=(const basic_uint<y> &); //smaller basic_uint, widening
     template<unsigned int y, typename std::enable_if<x < y>::type * = nullptr>
     basic_uint& operator+=(const basic_uint<y> &); //bigger basic_uint, narrowing
+
+    template<class UintT>
+    basic_uint& operator-=(const UintT&);
+    basic_uint& operator-=(const basic_uint&);
+    template<unsigned int y, typename std::enable_if<y < x>::type * = nullptr>
+    basic_uint& operator-=(const basic_uint<y> &); //smaller basic_uint, widening
+    template<unsigned int y, typename std::enable_if<x < y>::type * = nullptr>
+    basic_uint& operator-=(const basic_uint<y> &); //bigger basic_uint, narrowing
+
+    template<class UintT>
+    basic_uint& operator*=(const UintT&);
+    basic_uint& operator*=(const basic_uint&);
+    template<unsigned int y, typename std::enable_if<y < x>::type * = nullptr>
+    basic_uint& operator*=(const basic_uint<y> &); //smaller basic_uint, widening
+    template<unsigned int y, typename std::enable_if<x < y>::type * = nullptr>
+    basic_uint& operator*=(const basic_uint<y> &); //bigger basic_uint, narrowing
 
     //comparison operators
     template<class UintT>
@@ -100,6 +118,68 @@ template<unsigned int x>
 template<unsigned int y, typename std::enable_if<x < y>::type *>
 basic_uint<x> &basic_uint<x>::operator+=(const basic_uint<y> &v) {
     mpn_add_n(data,data,v.data,n_words); //overflow
+    return *this;
+}
+
+
+template<unsigned int x>
+basic_uint<x> &basic_uint<x>::operator-=(const basic_uint &v) {
+    mpn_sub_n(data,data,v.data,n_words);
+    return *this;
+}
+
+template<unsigned int x>
+template<class UintT>
+basic_uint<x> &basic_uint<x>::operator-=(const UintT &v) {
+    static_assert(std::is_integral<UintT>::value, "Need an integral type!");
+    static_assert(std::is_unsigned<UintT>::value, "Need an unsigned type!");
+    mpn_sub_1(data,data,n_words,v);
+    return *this;
+}
+
+template<unsigned int x>
+template<unsigned int y, typename std::enable_if<y < x>::type *>
+basic_uint<x> &basic_uint<x>::operator-=(const basic_uint<y> &v) {
+    mpn_sub(data,data,n_words,v.data,basic_uint<y>::n_words);
+    return *this;
+}
+
+template<unsigned int x>
+template<unsigned int y, typename std::enable_if<x < y>::type *>
+basic_uint<x> &basic_uint<x>::operator-=(const basic_uint<y> &v) {
+    mpn_sub_n(data,data,v.data,n_words); //overflow
+    return *this;
+}
+
+template<unsigned int x>
+basic_uint<x> &basic_uint<x>::operator*=(const basic_uint &v) {
+    mpn_mul_n(buffer_data,data,v.data,n_words);
+    memcpy(data,buffer_data,n_words);
+    return *this;
+}
+
+template<unsigned int x>
+template<class UintT>
+basic_uint<x> &basic_uint<x>::operator*=(const UintT &v) {
+    static_assert(std::is_integral<UintT>::value, "Need an integral type!");
+    static_assert(std::is_unsigned<UintT>::value, "Need an unsigned type!");
+    mpn_mul_1(data,data,n_words,v);
+    return *this;
+}
+
+template<unsigned int x>
+template<unsigned int y, typename std::enable_if<y < x>::type *>
+basic_uint<x> &basic_uint<x>::operator*=(const basic_uint<y> &v) {
+    mpn_mul(buffer_data,data,n_words,v.data,basic_uint<y>::n_words);
+    memcpy(data,buffer_data,n_words);
+    return *this;
+}
+
+template<unsigned int x>
+template<unsigned int y, typename std::enable_if<x < y>::type *>
+basic_uint<x> &basic_uint<x>::operator*=(const basic_uint<y> &v) {
+    mpn_mul_n(buffer_data,data,v.data,n_words); //overflow
+    memcpy(data,buffer_data,n_words);
     return *this;
 }
 
