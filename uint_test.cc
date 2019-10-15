@@ -30,6 +30,19 @@ TEST(Uint,UintConstructor){
     //uint128_t u64b = u256b; //implicit narrowing, compiler error
 }
 
+TEST(Uint,Addition){
+    uint128_t a = 10101010LL, b = 1010101LL;
+    a+=b;
+    EXPECT_EQ(a,11111111ULL);
+    a+=22UL;
+    EXPECT_EQ(a,11111133ULL);
+    uint256_t c = a;
+    a+=c;
+    c+=a;
+    a+=11111133ULL;
+    EXPECT_EQ(a,c);
+}
+
 }
 }
 

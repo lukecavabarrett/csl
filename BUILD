@@ -2,6 +2,7 @@ cc_library(
     name = "uint",
     hdrs = ["uint.h"],
     visibility = ["//visibility:public"],
+    deps = ["@gmp//:lib"],
 )
 
 cc_test(

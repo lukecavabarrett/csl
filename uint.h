@@ -1,6 +1,9 @@
 #ifndef CSL_UINT_H
 #define CSL_UINT_H
 
+#include <gmp.h>
+#include <type_traits>
+
 namespace csl {
 
 template<unsigned int x>
@@ -10,7 +13,8 @@ class basic_uint {
     class basic_uint;
 
     typedef std::size_t size_t;
-    typedef uint64_t word_t;
+    typedef unsigned int iint;
+    typedef mp_limb_t word_t;
     static constexpr size_t n_words = (2 << x);
     word_t data[n_words]{}; // little endian
     static constexpr size_t n_bytes = n_words * sizeof(word_t);
@@ -29,6 +33,24 @@ public:
     basic_uint(const basic_uint<y> &); //smaller basic_uint, widening copy constructor
     template<unsigned int y, typename std::enable_if<x < y>::type * = nullptr>
     explicit basic_uint(const basic_uint<y> &); //smaller basic_uint, narrowing copy constructor
+
+    //arithmetic operators
+    template<class UintT>
+    basic_uint& operator+=(const UintT&);
+    basic_uint& operator+=(const basic_uint&);
+    template<unsigned int y, typename std::enable_if<y < x>::type * = nullptr>
+    basic_uint& operator+=(const basic_uint<y> &); //smaller basic_uint, widening
+    template<unsigned int y, typename std::enable_if<x < y>::type * = nullptr>
+    basic_uint& operator+=(const basic_uint<y> &); //bigger basic_uint, narrowing
+
+    //comparison operators
+    template<class UintT>
+    bool operator==(const UintT &) const; // primitive
+    bool operator==(const basic_uint&) const; //basic_uint
+    template<unsigned int y, typename std::enable_if<y < x>::type * = nullptr>
+    bool operator==(const basic_uint<y> &) const; //smaller basic_uint, widening
+    template<unsigned int y, typename std::enable_if<x < y>::type * = nullptr>
+    bool operator==(const basic_uint<y> &) const; //bigger basic_uint, widening
 
     //destructor
     ~basic_uint() = default;
@@ -50,6 +72,67 @@ basic_uint<x>::basic_uint(const UintT &v) {
 template<unsigned int x>
 basic_uint<x>::basic_uint(const basic_uint &v) {
     memcpy(data, v.data, n_bytes);
+}
+
+template<unsigned int x>
+basic_uint<x> &basic_uint<x>::operator+=(const basic_uint &v) {
+    mpn_add_n(data,data,v.data,n_words);
+    return *this;
+}
+
+template<unsigned int x>
+template<class UintT>
+basic_uint<x> &basic_uint<x>::operator+=(const UintT &v) {
+    static_assert(std::is_integral<UintT>::value, "Need an integral type!");
+    static_assert(std::is_unsigned<UintT>::value, "Need an unsigned type!");
+    mpn_add_1(data,data,n_words,v);
+    return *this;
+}
+
+template<unsigned int x>
+template<unsigned int y, typename std::enable_if<y < x>::type *>
+basic_uint<x> &basic_uint<x>::operator+=(const basic_uint<y> &v) {
+    mpn_add(data,data,n_words,v.data,basic_uint<y>::n_words);
+    return *this;
+}
+
+template<unsigned int x>
+template<unsigned int y, typename std::enable_if<x < y>::type *>
+basic_uint<x> &basic_uint<x>::operator+=(const basic_uint<y> &v) {
+    mpn_add_n(data,data,v.data,n_words); //overflow
+    return *this;
+}
+
+template<unsigned int x>
+template<class UintT>
+bool basic_uint<x>::operator==(const UintT &v) const {
+    static_assert(std::is_integral<UintT>::value, "Need an integral type!");
+    static_assert(std::is_unsigned<UintT>::value, "Need an unsigned type!");
+    if(data[0]!=v)return false;
+    for(iint i=1;i<n_words;++i)if(data[i])return false;
+    return true;
+}
+
+template<unsigned int x>
+bool basic_uint<x>::operator==(const basic_uint &v) const {
+    for(iint i=0;i<n_words;++i)if(data[i]!=v.data[i])return false;
+    return true;
+}
+
+template<unsigned int x>
+template<unsigned int y, typename std::enable_if<y < x>::type *>
+bool basic_uint<x>::operator==(const basic_uint<y> &v) const {
+    for(iint i=0;i<basic_uint<y>::n_words;++i)if(data[i]!=v.data[i])return false;
+    for(iint i=basic_uint<y>::n_words;i<n_words;++i)if(data[i])return false;
+    return true;
+}
+
+template<unsigned int x>
+template<unsigned int y, typename std::enable_if<x < y>::type *>
+bool basic_uint<x>::operator==(const basic_uint<y> &v) const {
+    for(iint i=0;i<n_words;++i)if(data[i]!=v.data[i])return false;
+    for(iint i=n_words;i<basic_uint<y>::n_words;++i)if(v.data[i])return false;
+    return true;
 }
 
 template<unsigned int x>
