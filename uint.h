@@ -228,13 +228,19 @@ basic_uint<x>::basic_uint(const basic_uint<y> &v) {
     memcpy(data, v.data, n_bytes);
 }
 
-
+// useful type definitions
 typedef basic_uint<0> uint128_t;
 typedef basic_uint<1> uint256_t;
 typedef basic_uint<2> uint512_t;
 typedef basic_uint<3> uint1024_t;
 typedef basic_uint<4> uint2048_t;
 typedef basic_uint<5> uint4096_t;
+typedef basic_uint<6> uint8192_t;
+typedef basic_uint<7> uint16384_t;
+typedef basic_uint<8> uint32768_t;
+typedef basic_uint<9> uint65536_t;
+typedef basic_uint<10> uint131072_t;
+typedef basic_uint<11> uint262144_t;
 
 }
 

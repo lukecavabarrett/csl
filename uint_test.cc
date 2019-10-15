@@ -6,9 +6,24 @@ namespace csl{
 namespace {
 
 TEST(Uint,BitsNumber){
+
+    //128
     EXPECT_EQ(uint128_t::n_bits,128);
+    EXPECT_EQ(sizeof(uint128_t),16);
+
+    //512
     EXPECT_EQ(uint256_t::n_bits,256);
+    EXPECT_EQ(sizeof(uint256_t),32);
+
+    //1024
     EXPECT_EQ(uint512_t::n_bits,512);
+    EXPECT_EQ(sizeof(uint512_t),64);
+
+    //...
+
+    //262144
+    EXPECT_EQ(uint262144_t::n_bits,262144);
+    EXPECT_EQ(sizeof(uint262144_t),32768);
 }
 
 TEST(Uint,IntegralConstructor){
