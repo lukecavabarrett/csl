@@ -58,6 +58,17 @@ TEST(Uint,Addition){
     EXPECT_EQ(a,c);
 }
 
+TEST(Uint,Decrement){
+    uint128_t a;
+    EXPECT_EQ(__builtin_popcount(a),0);
+    EXPECT_EQ(a,0ULL);
+    --a;
+    EXPECT_EQ(__builtin_popcount(a),128);
+    ++a;
+    EXPECT_EQ(__builtin_popcount(a),0);
+    EXPECT_EQ(a,0ULL);
+}
+
 }
 }
 

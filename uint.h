@@ -7,6 +7,12 @@
 namespace csl {
 
 template<unsigned int x>
+class basic_uint;
+
+template<unsigned int x>
+mp_bitcnt_t __builtin_popcount(const basic_uint<x> &);
+
+template<unsigned int x>
 class basic_uint {
     //friendship with all basic_uint
     template<unsigned int y> friend
@@ -61,6 +67,71 @@ public:
     template<unsigned int y, typename std::enable_if<x < y>::type * = nullptr>
     basic_uint& operator*=(const basic_uint<y> &); //bigger basic_uint, narrowing
 
+    /*
+    template<class UintT>
+    basic_uint& operator/=(const UintT&);
+    basic_uint& operator/=(const basic_uint&);
+    template<unsigned int y, typename std::enable_if<y < x>::type * = nullptr>
+    basic_uint& operator/=(const basic_uint<y> &); //smaller basic_uint, widening
+    template<unsigned int y, typename std::enable_if<x < y>::type * = nullptr>
+    basic_uint& operator/=(const basic_uint<y> &); //bigger basic_uint, narrowing
+    */
+
+    /*
+    template<class UintT>
+    basic_uint& operator%=(const UintT&);
+    basic_uint& operator%=(const basic_uint&);
+    template<unsigned int y, typename std::enable_if<y < x>::type * = nullptr>
+    basic_uint& operator%=(const basic_uint<y> &); //smaller basic_uint, widening
+    template<unsigned int y, typename std::enable_if<x < y>::type * = nullptr>
+    basic_uint& operator%=(const basic_uint<y> &); //bigger basic_uint, narrowing
+    */
+
+    /*
+    template<class UintT>
+    basic_uint& operator&=(const UintT&);
+    basic_uint& operator&=(const basic_uint&);
+    template<unsigned int y, typename std::enable_if<y < x>::type * = nullptr>
+    basic_uint& operator&=(const basic_uint<y> &); //smaller basic_uint, widening
+    template<unsigned int y, typename std::enable_if<x < y>::type * = nullptr>
+    basic_uint& operator&=(const basic_uint<y> &); //bigger basic_uint, narrowing
+    */
+
+    /*
+    template<class UintT>
+    basic_uint& operator|=(const UintT&);
+    basic_uint& operator|=(const basic_uint&);
+    template<unsigned int y, typename std::enable_if<y < x>::type * = nullptr>
+    basic_uint& operator|=(const basic_uint<y> &); //smaller basic_uint, widening
+    template<unsigned int y, typename std::enable_if<x < y>::type * = nullptr>
+    basic_uint& operator|=(const basic_uint<y> &); //bigger basic_uint, narrowing
+    */
+
+
+    /*
+    template<class UintT>
+    basic_uint& operator^=(const UintT&);
+    basic_uint& operator^=(const basic_uint&);
+    template<unsigned int y, typename std::enable_if<y < x>::type * = nullptr>
+    basic_uint& operator^=(const basic_uint<y> &); //smaller basic_uint, widening
+    template<unsigned int y, typename std::enable_if<x < y>::type * = nullptr>
+    basic_uint& operator^=(const basic_uint<y> &); //bigger basic_uint, narrowing
+    */
+
+    /*
+    basic_uint& operator<<=(int);
+    basic_uint& operator>>=(int);
+    */
+
+    basic_uint& operator++(int);
+    basic_uint& operator--(int);
+    basic_uint& operator++();
+    basic_uint& operator--();
+
+    //friend iint
+
+
+
     //comparison operators
     template<class UintT>
     bool operator==(const UintT &) const; // primitive
@@ -72,6 +143,9 @@ public:
 
     //destructor
     ~basic_uint() = default;
+
+    //friend functions
+    friend mp_bitcnt_t __builtin_popcount<x>(const basic_uint&);
 };
 
 template<unsigned int x>
@@ -200,6 +274,30 @@ bool basic_uint<x>::operator==(const basic_uint &v) const {
 }
 
 template<unsigned int x>
+basic_uint<x> &basic_uint<x>::operator++() {
+    ++(*data);
+    iint i=0;
+    while(data[i]==0){
+        ++i;
+        if(i==n_words)return *this;
+        ++data[i];
+    }
+    return *this;
+}
+
+template<unsigned int x>
+basic_uint<x> &basic_uint<x>::operator--() {
+    iint i=0;
+    while(data[i]==0){
+        --data[i];
+        ++i;
+        if(i==n_words)return *this;
+    }
+    --data[i];
+    return *this;
+}
+
+template<unsigned int x>
 template<unsigned int y, typename std::enable_if<y < x>::type *>
 bool basic_uint<x>::operator==(const basic_uint<y> &v) const {
     for(iint i=0;i<basic_uint<y>::n_words;++i)if(data[i]!=v.data[i])return false;
@@ -226,6 +324,11 @@ template<unsigned int x>
 template<unsigned int y, typename std::enable_if<x < y>::type *>
 basic_uint<x>::basic_uint(const basic_uint<y> &v) {
     memcpy(data, v.data, n_bytes);
+}
+
+template<unsigned int x>
+mp_bitcnt_t __builtin_popcount(const basic_uint<x> &v){
+    return mpn_popcount(v.data, basic_uint<x>::n_words);
 }
 
 // useful type definitions
