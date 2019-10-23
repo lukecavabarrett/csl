@@ -67,6 +67,10 @@ TEST(Uint,Decrement){
     ++a;
     EXPECT_EQ(__builtin_popcount(a),0);
     EXPECT_EQ(a,0ULL);
+
+    EXPECT_EQ(__builtin_popcount(a--),0);
+    EXPECT_EQ(__builtin_popcount(a++),128);
+    EXPECT_EQ(__builtin_popcount(a),0);
 }
 
 }

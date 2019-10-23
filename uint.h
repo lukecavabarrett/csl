@@ -123,12 +123,10 @@ public:
     basic_uint& operator>>=(int);
     */
 
-    basic_uint& operator++(int);
-    basic_uint& operator--(int);
+    basic_uint operator++(int);
+    basic_uint operator--(int);
     basic_uint& operator++();
     basic_uint& operator--();
-
-    //friend iint
 
 
 
@@ -295,6 +293,20 @@ basic_uint<x> &basic_uint<x>::operator--() {
     }
     --data[i];
     return *this;
+}
+
+template<unsigned int x>
+basic_uint<x> basic_uint<x>::operator++(int) {
+    basic_uint r(*this);
+    ++(*this);
+    return r;
+}
+
+template<unsigned int x>
+basic_uint<x> basic_uint<x>::operator--(int) {
+    basic_uint r(*this);
+    --(*this);
+    return r;
 }
 
 template<unsigned int x>
