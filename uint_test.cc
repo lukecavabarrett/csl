@@ -21,9 +21,9 @@ TEST(Uint,BitsNumber){
 
     //...
 
-    //262144
-    EXPECT_EQ(uint262144_t::n_bits,262144);
-    EXPECT_EQ(sizeof(uint262144_t),32768);
+    //2048
+    EXPECT_EQ(uint2048_t::n_bits,2048);
+    EXPECT_EQ(sizeof(uint2048_t),256);
 }
 
 TEST(Uint,IntegralConstructor){
