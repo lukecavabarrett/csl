@@ -73,13 +73,50 @@ TEST(Uint,Decrement){
     EXPECT_EQ(__builtin_popcount(a),0);
 }
 
+TEST(Uint,Multiplication){
+    uint128_t a = 0x1111LL;
+    a*=0xFULL;
+    EXPECT_EQ(a,0xFFFFULL);
+    uint128_t b = 0x10ULL;
+    a*=b;
+    EXPECT_EQ(a,0xFFFF0ULL);
+}
+
 TEST(Uint,Division){
-    uint64_t x = 0ULL, y = 0ULL;
-    x/=y;
-    uint128_t a = 10101010LL, b = 1010101LL;
+    uint128_t a = 0x12345LL, b = 0x10;
+    uint128_t a_old = a;
+    a*=b;
+    a/=0x10ULL;
+    EXPECT_EQ(a,a_old);
     a*=b;
     a/=b;
-    EXPECT_EQ(a,10101010ULL);
+    EXPECT_EQ(a,a_old);
+}
+
+TEST(Uint,Division2){
+    uint128_t a;
+    constexpr uint64_t M = std::numeric_limits<uint64_t>::max();
+    a.set(); // a = 2^128 -1
+    uint128_t b = M;
+    ++b; // b = 2^64
+    EXPECT_EQ(__builtin_popcount(a),128);
+    a/=b; // a = 2^64 - 1
+    EXPECT_EQ(a,M);
+}
+
+TEST(Uint,Modulo2){
+    uint128_t a;
+    constexpr uint64_t M = std::numeric_limits<uint64_t>::max();
+    a.set(); // a = 2^128 -1
+    uint128_t b = M;
+    ++b; // b = 2^64
+    EXPECT_EQ(__builtin_popcount(a),128);
+    a%=b; // a = 2^64 - 1
+    EXPECT_EQ(a,M);
+    a.set(); // a = 2^128 -1
+    b = M;
+    a%=b;
+    EXPECT_EQ(a,0ULL);
 }
 
 }

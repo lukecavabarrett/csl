@@ -28,7 +28,7 @@ class basic_uint {
 public:
     static constexpr size_t n_bits = n_words * sizeof(word_t) * 8;
 
-private:
+public:
 
     inline void reset();
     inline void set();
@@ -247,7 +247,7 @@ basic_uint<x> &basic_uint<x>::operator-=(const basic_uint<y> &v) {
 template<unsigned int x>
 basic_uint<x> &basic_uint<x>::operator*=(const basic_uint &v) {
     mpn_mul_n(buffer_data, data, v.data, n_words);
-    memcpy(data, buffer_data, n_words);
+    memcpy(data, buffer_data, n_bytes);
     return *this;
 }
 
@@ -264,7 +264,7 @@ template<unsigned int x>
 template<unsigned int y, typename std::enable_if<y < x>::type *>
 basic_uint<x> &basic_uint<x>::operator*=(const basic_uint<y> &v) {
     mpn_mul(buffer_data, data, n_words, v.data, basic_uint<y>::n_words);
-    memcpy(data, buffer_data, n_words);
+    memcpy(data, buffer_data, n_bytes);
     return *this;
 }
 
@@ -272,14 +272,14 @@ template<unsigned int x>
 template<unsigned int y, typename std::enable_if<x < y>::type *>
 basic_uint<x> &basic_uint<x>::operator*=(const basic_uint<y> &v) {
     mpn_mul_n(buffer_data, data, v.data, n_words); //overflow
-    memcpy(data, buffer_data, n_words);
+    memcpy(data, buffer_data, n_bytes);
     return *this;
 }
 
 template<unsigned int x>
 template<unsigned int y>
 basic_uint<x> &basic_uint<x>::operator/=(const basic_uint<y> &v) {
-    //TODO: most significant bit of v must be non zero
+    // most significant bit of v must be non zero
     size_t vn_words = basic_uint<y>::n_words;
     while (vn_words && v.data[vn_words - 1] == 0)--vn_words;
     if (vn_words == 0)vn_words /= vn_words;
@@ -287,9 +287,10 @@ basic_uint<x> &basic_uint<x>::operator/=(const basic_uint<y> &v) {
         reset();
         return *this;
     }
-    mpn_tdiv_qr(data, buffer_data, 0, data, n_words, v.data, vn_words);
-    memcpy(data, buffer_data, n_words - vn_words + 1);
-    memset(data + n_words - vn_words + 1, 0, (vn_words - 1) * sizeof(word_t));
+    mpn_tdiv_qr(buffer_data, data, 0, data, n_words, v.data, vn_words);
+    memcpy(data, buffer_data, (n_words - vn_words + 1)*sizeof(word_t));
+    // TODO: discover whether the following clean is necessary
+    // memset(data + n_words - vn_words + 1, 0, (vn_words - 1) * sizeof(word_t));
     return *this;
 }
 
@@ -305,12 +306,12 @@ basic_uint<x> &basic_uint<x>::operator/=(const UintT &v) {
 template<unsigned int x>
 template<unsigned int y>
 basic_uint<x> &basic_uint<x>::operator%=(const basic_uint<y> &v) {
-    //TODO: most significant bit of v must be non zero
+    // most significant bit of v must be non zero
     size_t vn_words = basic_uint<y>::n_words;
     while (vn_words && v.data[vn_words - 1] == 0)--vn_words;
     if (vn_words == 0)vn_words /= vn_words;
     if (vn_words > n_words)return *this;
-    mpn_tdiv_qr(data, buffer_data, 0, data, n_words, v.data, vn_words);
+    mpn_tdiv_qr(buffer_data, data, 0, data, n_words, v.data, vn_words);
     memset(data + vn_words, 0, (n_words - vn_words) * sizeof(word_t));
     return *this;
 }
