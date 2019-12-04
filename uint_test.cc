@@ -73,6 +73,15 @@ TEST(Uint,Decrement){
     EXPECT_EQ(__builtin_popcount(a),0);
 }
 
+TEST(Uint,Division){
+    uint64_t x = 0ULL, y = 0ULL;
+    x/=y;
+    uint128_t a = 10101010LL, b = 1010101LL;
+    a*=b;
+    a/=b;
+    EXPECT_EQ(a,10101010ULL);
+}
+
 }
 }
 
