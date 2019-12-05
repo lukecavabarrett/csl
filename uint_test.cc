@@ -46,27 +46,27 @@ TEST(Uint,UintConstructor){
 }
 
 TEST(Uint,Addition){
-    uint128_t a = 10101010LL, b = 1010101LL;
+    uint128_t a = 10101010, b = 1010101;
     a+=b;
-    EXPECT_EQ(a,11111111ULL);
+    EXPECT_EQ(a,11111111);
     a+=22UL;
-    EXPECT_EQ(a,11111133ULL);
+    EXPECT_EQ(a,11111133);
     uint256_t c = a;
     a+=c;
     c+=a;
-    a+=11111133ULL;
+    a+=11111133;
     EXPECT_EQ(a,c);
 }
 
 TEST(Uint,Decrement){
     uint128_t a;
     EXPECT_EQ(__builtin_popcount(a),0);
-    EXPECT_EQ(a,0ULL);
+    EXPECT_EQ(a,0);
     --a;
     EXPECT_EQ(__builtin_popcount(a),128);
     ++a;
     EXPECT_EQ(__builtin_popcount(a),0);
-    EXPECT_EQ(a,0ULL);
+    EXPECT_EQ(a,0);
 
     EXPECT_EQ(__builtin_popcount(a--),0);
     EXPECT_EQ(__builtin_popcount(a++),128);
@@ -74,19 +74,19 @@ TEST(Uint,Decrement){
 }
 
 TEST(Uint,Multiplication){
-    uint128_t a = 0x1111LL;
-    a*=0xFULL;
-    EXPECT_EQ(a,0xFFFFULL);
-    uint128_t b = 0x10ULL;
+    uint128_t a = 0x1111;
+    a*=0xF;
+    EXPECT_EQ(a,0xFFFF);
+    uint128_t b = 0x10;
     a*=b;
-    EXPECT_EQ(a,0xFFFF0ULL);
+    EXPECT_EQ(a,0xFFFF0);
 }
 
 TEST(Uint,Division){
-    uint128_t a = 0x12345LL, b = 0x10;
+    uint128_t a = 0x12345, b = 0x10;
     uint128_t a_old = a;
     a*=b;
-    a/=0x10ULL;
+    a/=0x10;
     EXPECT_EQ(a,a_old);
     a*=b;
     a/=b;
@@ -116,16 +116,16 @@ TEST(Uint,Modulo2){
     a.set(); // a = 2^128 -1
     b = M;
     a%=b;
-    EXPECT_EQ(a,0ULL);
+    EXPECT_EQ(a,0);
 }
 
 TEST(Uint,Mul7byShift){
     uint256_t a;
     a.set();
     uint256_t b = a;
-    b <<=3ULL;
+    b <<=3;
     b-=a;
-    a*=7ULL;
+    a*=7;
     EXPECT_EQ(a,b);
 }
 
