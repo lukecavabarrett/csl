@@ -131,17 +131,12 @@ typename basic_uint<x>::word_t basic_uint<x>::buffer_data[2 * n_words];
 
 template<unsigned int x>
 inline void basic_uint<x>::reset() {
-    memset(data, 0, n_bytes);
-}
-
-template<unsigned int x>
-inline void basic_uint<x>::reset(size_t b) {
-    memset(data + b, 0, (n_words - b) * sizeof(word_t));
+    mpn_zero(data, n_words);
 }
 
 template<unsigned int x>
 inline void basic_uint<x>::set() {
-    memset(data, 255, n_bytes);
+    mpn_xnor_n(data, data, n_words);
 }
 
 template<unsigned int x>
@@ -152,12 +147,12 @@ basic_uint<x>::basic_uint() {
 template<unsigned int x>
 basic_uint<x>::basic_uint(const word_t v) {
     data[0] = v;
-    memset(data + 1, 0, n_bytes - sizeof(word_t));
+    mpn_zero(data + 1, n_words - 1);
 }
 
 template<unsigned int x>
 basic_uint<x>::basic_uint(const basic_uint &v) {
-    memcpy(data, v.data, n_bytes);
+    mpn_copyi(data, v.data, n_words);
 }
 
 template<unsigned int x>
@@ -216,7 +211,7 @@ basic_uint<x> &basic_uint<x>::operator-=(const basic_uint<y> &v) {
 template<unsigned int x>
 basic_uint<x> &basic_uint<x>::operator*=(const basic_uint &v) {
     mpn_mul_n(buffer_data, data, v.data, n_words);
-    memcpy(data, buffer_data, n_bytes);
+    mpn_copyi(data, buffer_data, n_words);
     return *this;
 }
 
@@ -230,7 +225,7 @@ template<unsigned int x>
 template<unsigned int y, typename std::enable_if<y < x>::type *>
 basic_uint<x> &basic_uint<x>::operator*=(const basic_uint<y> &v) {
     mpn_mul(buffer_data, data, n_words, v.data, basic_uint<y>::n_words);
-    memcpy(data, buffer_data, n_bytes);
+    mpn_copyi(data, buffer_data, n_words);
     return *this;
 }
 
@@ -238,7 +233,7 @@ template<unsigned int x>
 template<unsigned int y, typename std::enable_if<x < y>::type *>
 basic_uint<x> &basic_uint<x>::operator*=(const basic_uint<y> &v) {
     mpn_mul_n(buffer_data, data, v.data, n_words); //overflow
-    memcpy(data, buffer_data, n_bytes);
+    mpn_copyi(data, buffer_data, n_words);
     return *this;
 }
 
@@ -254,9 +249,9 @@ basic_uint<x> &basic_uint<x>::operator/=(const basic_uint<y> &v) {
         return *this;
     }
     mpn_tdiv_qr(buffer_data, data, 0, data, n_words, v.data, vn_words);
-    memcpy(data, buffer_data, (n_words - vn_words + 1) * sizeof(word_t));
+    mpn_copyi(data, buffer_data, n_words - vn_words + 1);
     // TODO: discover whether the following clean is necessary
-    // memset(data + n_words - vn_words + 1, 0, (vn_words - 1) * sizeof(word_t));
+    // mpn_zero(data + n_words - vn_words + 1, vn_words - 1);
     return *this;
 }
 
@@ -275,7 +270,7 @@ basic_uint<x> &basic_uint<x>::operator%=(const basic_uint<y> &v) {
     if (vn_words == 0)vn_words /= vn_words;
     if (vn_words > n_words)return *this;
     mpn_tdiv_qr(buffer_data, data, 0, data, n_words, v.data, vn_words);
-    memset(data + vn_words, 0, (n_words - vn_words) * sizeof(word_t));
+    mpn_zero(data+vn_words,n_words-vn_words);
     return *this;
 }
 
@@ -389,7 +384,7 @@ bool basic_uint<x>::operator==(const word_t v) const {
 
 template<unsigned int x>
 bool basic_uint<x>::operator==(const basic_uint &v) const {
-    return !mpn_cmp(data,v.data,n_words);
+    return !mpn_cmp(data, v.data, n_words);
 }
 
 template<unsigned int x>
