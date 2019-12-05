@@ -17,7 +17,6 @@ class basic_uint {
     //friendship with all basic_uint
     template<unsigned int y> friend
     class basic_uint;
-
     typedef std::size_t size_t;
     typedef unsigned int iint;
     typedef mp_limb_t word_t;
@@ -111,10 +110,10 @@ public:
     template<unsigned int y, typename std::enable_if<x < y>::type * = nullptr>
     basic_uint& operator^=(const basic_uint<y> &); //bigger basic_uint, narrowing
 
-    /*
-    basic_uint& operator<<=(int);
-    basic_uint& operator>>=(int);
-    */
+
+    basic_uint& operator<<=(const word_t);
+    basic_uint& operator>>=(const word_t);
+
 
     basic_uint operator++(int);
     basic_uint operator--(int);
@@ -395,6 +394,22 @@ template<unsigned int x>
 template<unsigned int y, typename std::enable_if<x < y>::type *>
 basic_uint<x> &basic_uint<x>::operator^=(const basic_uint<y> &v) {
     mpn_xor_n(data, data, v.data, n_words);
+    return *this;
+}
+
+template<unsigned int x>
+basic_uint<x> &basic_uint<x>::operator<<=(const word_t v) {
+    const iint wskip = v/mp_bits_per_limb;
+    mpn_lshift(data+wskip,data,n_words-wskip,v%mp_bits_per_limb);
+    mpn_zero(data,wskip);
+    return *this;
+}
+
+template<unsigned int x>
+basic_uint<x> &basic_uint<x>::operator>>=(const word_t v) {
+    const iint wskip = v/mp_bits_per_limb;
+    mpn_rshift(data,data+wskip,n_words-wskip,v);
+    mpn_zero(data+n_words-wskip,wskip);
     return *this;
 }
 
