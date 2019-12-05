@@ -384,38 +384,23 @@ basic_uint<x> &basic_uint<x>::operator>>=(const word_t v) {
 
 template<unsigned int x>
 bool basic_uint<x>::operator==(const word_t v) const {
-    if (data[0] != v)return false;
-    for (iint i = 1; i < n_words; ++i)if (data[i])return false;
-    return true;
+    return *data == v && mpn_zero_p(data + 1, n_words - 1);
 }
 
 template<unsigned int x>
 bool basic_uint<x>::operator==(const basic_uint &v) const {
-    for (iint i = 0; i < n_words; ++i)if (data[i] != v.data[i])return false;
-    return true;
+    return !mpn_cmp(data,v.data,n_words);
 }
 
 template<unsigned int x>
 basic_uint<x> &basic_uint<x>::operator++() {
-    ++(*data);
-    iint i = 0;
-    while (data[i] == 0) {
-        ++i;
-        if (i == n_words)return *this;
-        ++data[i];
-    }
+    mpn_add_1(data, data, n_words, 1);
     return *this;
 }
 
 template<unsigned int x>
 basic_uint<x> &basic_uint<x>::operator--() {
-    iint i = 0;
-    while (data[i] == 0) {
-        --data[i];
-        ++i;
-        if (i == n_words)return *this;
-    }
-    --data[i];
+    mpn_sub_1(data, data, n_words, 1);
     return *this;
 }
 
@@ -436,30 +421,27 @@ basic_uint<x> basic_uint<x>::operator--(int) {
 template<unsigned int x>
 template<unsigned int y, typename std::enable_if<y < x>::type *>
 bool basic_uint<x>::operator==(const basic_uint<y> &v) const {
-    for (iint i = 0; i < basic_uint<y>::n_words; ++i)if (data[i] != v.data[i])return false;
-    for (iint i = basic_uint<y>::n_words; i < n_words; ++i)if (data[i])return false;
-    return true;
+    return !mpn_cmp(data, v.data, basic_uint<y>::n_words) &&
+           mpn_zero_p(data + basic_uint<y>::n_words, n_words - basic_uint<y>::n_words);
 }
 
 template<unsigned int x>
 template<unsigned int y, typename std::enable_if<x < y>::type *>
 bool basic_uint<x>::operator==(const basic_uint<y> &v) const {
-    for (iint i = 0; i < n_words; ++i)if (data[i] != v.data[i])return false;
-    for (iint i = n_words; i < basic_uint<y>::n_words; ++i)if (v.data[i])return false;
-    return true;
+    return !mpn_cmp(data, v.data, n_words) && mpn_zero_p(v.data + n_words, basic_uint<y>::n_words - n_words);
 }
 
 template<unsigned int x>
 template<unsigned int y, typename std::enable_if<y < x>::type *>
 basic_uint<x>::basic_uint(const basic_uint<y> &v) {
-    memcpy(data, v.data, basic_uint<y>::n_bytes);
-    memset(data + basic_uint<y>::n_words, 0, n_bytes - basic_uint<y>::n_bytes);
+    mpn_copyi(data, v.data, basic_uint<y>::n_words);
+    mpn_zero(data + basic_uint<y>::n_words, n_words - basic_uint<y>::n_words);
 }
 
 template<unsigned int x>
 template<unsigned int y, typename std::enable_if<x < y>::type *>
 basic_uint<x>::basic_uint(const basic_uint<y> &v) {
-    memcpy(data, v.data, n_bytes);
+    mpn_copyi(data, v.data, n_words);
 }
 
 template<unsigned int x>
