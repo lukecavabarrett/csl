@@ -31,6 +31,7 @@ public:
 public:
 
     inline void reset();
+    inline void reset(size_t b);
     inline void set();
 
 public:
@@ -86,17 +87,6 @@ public:
     basic_uint &operator%=(const basic_uint<y> &);
 
 
-    /*
-    template<class UintT>
-    basic_uint& operator%=(const UintT&);
-    basic_uint& operator%=(const basic_uint&);
-    template<unsigned int y, typename std::enable_if<y < x>::type * = nullptr>
-    basic_uint& operator%=(const basic_uint<y> &); //smaller basic_uint, widening
-    template<unsigned int y, typename std::enable_if<x < y>::type * = nullptr>
-    basic_uint& operator%=(const basic_uint<y> &); //bigger basic_uint, narrowing
-    */
-
-    /*
     template<class UintT>
     basic_uint& operator&=(const UintT&);
     basic_uint& operator&=(const basic_uint&);
@@ -104,9 +94,7 @@ public:
     basic_uint& operator&=(const basic_uint<y> &); //smaller basic_uint, widening
     template<unsigned int y, typename std::enable_if<x < y>::type * = nullptr>
     basic_uint& operator&=(const basic_uint<y> &); //bigger basic_uint, narrowing
-    */
 
-    /*
     template<class UintT>
     basic_uint& operator|=(const UintT&);
     basic_uint& operator|=(const basic_uint&);
@@ -114,10 +102,7 @@ public:
     basic_uint& operator|=(const basic_uint<y> &); //smaller basic_uint, widening
     template<unsigned int y, typename std::enable_if<x < y>::type * = nullptr>
     basic_uint& operator|=(const basic_uint<y> &); //bigger basic_uint, narrowing
-    */
 
-
-    /*
     template<class UintT>
     basic_uint& operator^=(const UintT&);
     basic_uint& operator^=(const basic_uint&);
@@ -125,7 +110,6 @@ public:
     basic_uint& operator^=(const basic_uint<y> &); //smaller basic_uint, widening
     template<unsigned int y, typename std::enable_if<x < y>::type * = nullptr>
     basic_uint& operator^=(const basic_uint<y> &); //bigger basic_uint, narrowing
-    */
 
     /*
     basic_uint& operator<<=(int);
@@ -160,6 +144,11 @@ typename basic_uint<x>::word_t basic_uint<x>::buffer_data[2 * n_words];
 template<unsigned int x>
 inline void basic_uint<x>::reset() {
     memset(data, 0, n_bytes);
+}
+
+template<unsigned int x>
+inline void basic_uint<x>::reset(size_t b) {
+    memset(data+b, 0, (n_words-b)*sizeof(word_t));
 }
 
 template<unsigned int x>
@@ -322,6 +311,90 @@ basic_uint<x> &basic_uint<x>::operator%=(const UintT &v) {
     static_assert(std::is_integral<UintT>::value, "Need an integral type!");
     static_assert(std::is_unsigned<UintT>::value, "Need an unsigned type!");
     mpn_divrem_1(data, 0, data, n_words, v);
+    return *this;
+}
+
+
+template<unsigned int x>
+basic_uint<x> &basic_uint<x>::operator&=(const basic_uint &v) {
+    mpn_and_n(data, data, v.data, n_words);
+    return *this;
+}
+
+template<unsigned int x>
+template<class UintT>
+basic_uint<x> &basic_uint<x>::operator&=(const UintT &v) {
+    *data &= v;
+    reset(1);
+    return *this;
+}
+
+template<unsigned int x>
+template<unsigned int y, typename std::enable_if<y < x>::type *>
+basic_uint<x> &basic_uint<x>::operator&=(const basic_uint<y> &v) {
+    mpn_and_n(data, data, v.data, basic_uint<y>::n_words);
+    reset(basic_uint<y>::n_words);
+    return *this;
+}
+
+template<unsigned int x>
+template<unsigned int y, typename std::enable_if<x < y>::type *>
+basic_uint<x> &basic_uint<x>::operator&=(const basic_uint<y> &v) {
+    mpn_and_n(data, data, v.data, n_words);
+    return *this;
+}
+
+template<unsigned int x>
+basic_uint<x> &basic_uint<x>::operator|=(const basic_uint &v) {
+    mpn_ior_n(data, data, v.data, n_words);
+    return *this;
+}
+
+template<unsigned int x>
+template<class UintT>
+basic_uint<x> &basic_uint<x>::operator|=(const UintT &v) {
+    *data |= v;
+    return *this;
+}
+
+template<unsigned int x>
+template<unsigned int y, typename std::enable_if<y < x>::type *>
+basic_uint<x> &basic_uint<x>::operator|=(const basic_uint<y> &v) {
+    mpn_ior_n(data, data, v.data, basic_uint<y>::n_words);
+    return *this;
+}
+
+template<unsigned int x>
+template<unsigned int y, typename std::enable_if<x < y>::type *>
+basic_uint<x> &basic_uint<x>::operator|=(const basic_uint<y> &v) {
+    mpn_ior_n(data, data, v.data, n_words);
+    return *this;
+}
+
+template<unsigned int x>
+basic_uint<x> &basic_uint<x>::operator^=(const basic_uint &v) {
+    mpn_xor_n(data, data, v.data, n_words);
+    return *this;
+}
+
+template<unsigned int x>
+template<class UintT>
+basic_uint<x> &basic_uint<x>::operator^=(const UintT &v) {
+    *data ^= v;
+    return *this;
+}
+
+template<unsigned int x>
+template<unsigned int y, typename std::enable_if<y < x>::type *>
+basic_uint<x> &basic_uint<x>::operator^=(const basic_uint<y> &v) {
+    mpn_xor_n(data, data, v.data, basic_uint<y>::n_words);
+    return *this;
+}
+
+template<unsigned int x>
+template<unsigned int y, typename std::enable_if<x < y>::type *>
+basic_uint<x> &basic_uint<x>::operator^=(const basic_uint<y> &v) {
+    mpn_xor_n(data, data, v.data, n_words);
     return *this;
 }
 
