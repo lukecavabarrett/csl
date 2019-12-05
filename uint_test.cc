@@ -108,8 +108,8 @@ TEST(Uint,Modulo2){
     uint128_t a;
     constexpr uint64_t M = std::numeric_limits<uint64_t>::max();
     a.set(); // a = 2^128 -1
-    uint128_t b = M;
-    ++b; // b = 2^64
+    uint128_t b = 1;
+    b<<=64;
     EXPECT_EQ(__builtin_popcount(a),128);
     a%=b; // a = 2^64 - 1
     EXPECT_EQ(a,M);
@@ -117,6 +117,16 @@ TEST(Uint,Modulo2){
     b = M;
     a%=b;
     EXPECT_EQ(a,0ULL);
+}
+
+TEST(Uint,Mul7byShift){
+    uint256_t a;
+    a.set();
+    uint256_t b = a;
+    b <<=3ULL;
+    b-=a;
+    a*=7ULL;
+    EXPECT_EQ(a,b);
 }
 
 }
